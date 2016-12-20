@@ -13,7 +13,7 @@ void scanint(T &x)
 }
 
 template<typename T>
-void printint(T a)
+void lprint(T a)
 {
  int i=0;
 char S[20];
