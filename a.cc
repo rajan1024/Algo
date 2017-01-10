@@ -93,14 +93,14 @@ int main(){
 		st[i].F.S = i-_n+1;
 		st[i].S.F = st[i].S.S = i-_n+1;
 	}
-	vector<pair<vector<int>, vector<int> > > g(n+1,mp(vector<int>(0),vector<int>(0)));
+	vector<vector<int> > g1(n+1),g2(n+1);
 	vector<pii> edge(n+1);
 	for(int i=0;i<e;i++){
 		scanint(u);
 		scanint(v);
 		edge[i+1] = mp(u,v);
-		g[u].F.pb(v);
-		g[v].S.pb(u);
+		g1[u].pb(v);
+		g2[v].pb(u);
 		st[_n+u-1].F.F++;
 		st[_n+v-1].F.F--;
 	}
@@ -126,42 +126,42 @@ int main(){
 		cout<<"node is "<<idx<<" defect is "<<def<<"    ";
 		
 		if(def > 0){ 
-			int node = g[idx].F[0]; //take out first outgoing node...
-			int min = g[node].F.size()-g[node].S.size(); //calculte its defect...
+			int node = g1[idx][0]; //take out first outgoing node...
+			int min = g1[node].size()-g2[node].size(); //calculte its defect...
 			int min_n = node;
-			for(int i=1;i<g[idx].F.size();i++){
-				int node = g[idx].F[i];
-				int temp = g[node].F.size()-g[node].S.size();
+			for(int i=1;i<g1[idx].size();i++){
+				int node = g1[idx][i];
+				int temp = g1[node].size()-g2[node].size();
 				if(temp < min){ min = temp; min_n = node; }
 			}
 			cout<<"swaping edge between "<<idx<<':'<< min_n<<endl;
 			//min_n is the node with most negative defect...
 			//reverse the edge between idx and min_n...
-			g[idx].F.erase(find(g[idx].F.begin(),g[idx].F.end(), min_n ));
-			g[idx].S.pb(min_n);
-			g[min_n].F.pb(idx);
-			g[min_n].S.erase(find(g[min_n].S.begin(),g[min_n].S.end(), idx ) );
+			g1[idx].erase(find(g1[idx].begin(),g1[idx].end(), min_n ));
+			g2[idx].pb(min_n);
+			g1[min_n].pb(idx);
+			g2[min_n].erase(find(g2[min_n].begin(),g2[min_n].end(), idx ) );
 			
 			//correct the defect in seg tree...
 			update(st,idx, st[idx+_n-1].F.F - 2,_n);
 			update(st,min_n, st[min_n+_n-1].F.F + 2,_n);
 		}
 		else{
-			int node = g[idx].S[0]; 
-			int max = g[node].F.size()-g[node].S.size(); 
+			int node = g2[idx][0]; 
+			int max = g1[node].size()-g2[node].size(); 
 			int max_n = node;
-			for(int i=1;i<g[idx].S.size();i++){
-				int node = g[idx].S[i];
-				int temp = g[node].F.size()-g[node].S.size();
+			for(int i=1;i<g2[idx].size();i++){
+				int node = g2[idx][i];
+				int temp = g1[node].size()-g2[node].size();
 				if(temp > max){ max = temp; max_n = node; }
 			}
 			
 			cout<<"swaping edge between "<<idx<<':'<<max_n<<endl;
 			
-			g[idx].S.erase(find(g[idx].S.begin(),g[idx].S.end(), max_n ));
-			g[idx].F.pb(max_n);
-			g[max_n].S.pb(idx);
-			g[max_n].F.erase(find(g[max_n].F.begin(),g[max_n].F.end(), idx ) );
+			g2[idx].erase(find(g2[idx].begin(),g2[idx].end(), max_n ));
+			g1[idx].pb(max_n);
+			g2[max_n].pb(idx);
+			g1[max_n].erase(find(g1[max_n].begin(),g1[max_n].end(), idx ) );
 			
 			//correct the defect in seg tree...
 			update(st,idx, st[idx+_n-1].F.F + 2,_n);
@@ -174,7 +174,7 @@ int main(){
 	for(int i=1;i<=e;i++){
 		u = edge[i].F;
 		v = edge[i].S;
-		if(find(g[u].F.begin(), g[u].F.end(), v) != g[u].F.end()) { printint(u); pc(' '); printint(v); pc('\n');}
+		if(find(g1[u].begin(), g1[u].end(), v) != g1[u].end()) { printint(u); pc(' '); printint(v); pc('\n');}
 		else { printint(v); pc(' '); printint(u); pc('\n');}
 	}
 	
