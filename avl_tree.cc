@@ -53,7 +53,7 @@ class Avl_tree{
 
 
 	// compare function should be passed to compare node's data.
-	int (*compare)(void*,void*);
+	int (*compare_function)(void*,void*);
 	/* 	Comparator function should follow this rule.
 		int compare(a,b){
 			if(a==b) return 0;
@@ -64,7 +64,7 @@ class Avl_tree{
 
 
 
-	void (*print_node)(node*);
+	void (*print_node_function)(node*);
 	/*	custom print_node function should be passed,
 		so that you can print your node's attributes and node's
 	 	data in desired manner. If passed NULL insted will print only 
@@ -72,7 +72,7 @@ class Avl_tree{
 	*/
 					
 	
-	void (*delete_node_data)(void*);
+	void (*delete_data_function)(void*);
 	/*	pass your own node's data deletion function
 		this will be called every time a node is begin 
 		deleted from tree, to free memory occupied by node->data.
@@ -84,9 +84,9 @@ public:
 		node_printer function and
 		node's data deleter function.
 	*/
-	Avl_tree(	int (*comp)(void*,void*), 
-				void (*print_node)(node*), 
-				void (*delete_node_data)(void*)
+	Avl_tree(	int (*comparator_fun)(void*,void*), 
+				void (*delete_data_fun)(void*),
+				void (*print_node_fun)(node*)
 			);
 	
 	
@@ -101,7 +101,15 @@ public:
 
 	// prints inorder traversal of this tree.
 	void inorder_traversal();
+	
+	// find the rank of a node containing data in tree.
+	// if nodes were in an sorted array what would have been its rank.
+	int rank(void *data);
 
+	// tree size.
+	int size(){
+		return root?root->size:0;
+	}
 
 private:
 	// delete node from tree.
@@ -124,27 +132,49 @@ private:
 
 	// inorder_traversal of this tree.
 	void inorder(node *nod);
+	
+	// delete_node_data will call safely delete_data_function().
+	void delete_node_data(void *data);
 
 };
 
-Avl_tree::Avl_tree(	int (*comp)(void*,void*), 
-					void (*print)(node*) = print_node_addr,
-					void (*del)(void*) = free
+Avl_tree::Avl_tree(	int (*comparator_fun)(void*,void*), 
+					void (*delete_data_fun)(void*),
+					void (*print_node_fun)(node*) = print_node_addr
 				){
 	// Initialise root to NULL.
 	root = NULL;
 
 	// Set the compare function passed as and argument.
-	compare = comp;
+	compare_function = comparator_fun;
 
 	// Set the node printer function.
 	// If NULL is passed default will be print_node_addr.
-	if(print) print_node = print;
-	else print_node = print_node_addr;
+	print_node_function = print_node_fun;
 
 	// Set node's data deleter function.
-	if(del) delete_node_data = del;
-	else	delete_node_data = free;
+	delete_data_function = delete_data_fun;
+
+}
+
+
+int Avl_tree::rank(void *data){
+	node *temp = root;
+	int sum = 0;
+	while(temp){
+		int result  = compare_function(data,temp->data);
+		if(result == 0){
+			sum += temp->left?temp->left->size:0;
+			return sum;
+		}
+		else if(result > 0){
+			sum += temp->left?temp->left->size+temp->count:temp->count;
+			temp = temp->right;
+		}
+		else temp = temp->left;
+	}
+
+	return sum;
 }
 
 void Avl_tree::insert_data(void *data){
@@ -176,7 +206,7 @@ node* Avl_tree::insert_node(node *nod, void *data, node *parent){
 		return nod;
 	}
 
-	int result = compare(data,nod->data);
+	int result = compare_function(data,nod->data);
 	if(result < 0){
 		// data is <= current node data
 		// insert it in left subtree.
@@ -202,7 +232,7 @@ node* Avl_tree::insert_node(node *nod, void *data, node *parent){
 	if(abs(left_height-right_height) > 1){
 #ifdef DEBUG 
 		printf("tree unbalanced at nod\n");
-		print_node(nod);
+		print_node_function(nod);
 #endif
 		nod = balance(nod);
 	}
@@ -229,6 +259,18 @@ void Avl_tree::delete_data(void *data){
 	else printf("Delete Failed. Node not found.\n");
 }
 
+
+void Avl_tree::delete_node_data(void *data){
+	if(delete_data_function){
+		delete_data_function(data);
+	}
+	else{
+#ifdef DEBUG
+		printf("Warning: Memory Leak may occur. You should pass data_deleter_function, "
+		" to delete your data while deleting Node in tree, in constructor of Avl_tree\n");	
+#endif
+	}
+}
 
 void Avl_tree::delete_node(node *nod){
 	node *balancing_node = NULL;
@@ -280,6 +322,7 @@ void Avl_tree::delete_node(node *nod){
 			root = nod->left;
 			nod->left->parent = NULL;
 		}
+		delete_node_data(nod->data);
 		free(nod);
 	}
 	if(nod->left != NULL && nod->right != NULL){
@@ -295,10 +338,12 @@ void Avl_tree::delete_node(node *nod){
 		if(balancing_node->left == temp) balancing_node->left = temp->left;
 		else balancing_node->right = temp->left;
 		
+		if(temp->left) temp->left->parent = balancing_node;
 
 		// Swap temp->data with nod->data, and delete temp node.
 		delete_node_data(nod->data);
 		nod->data = temp->data;
+		nod->count = temp->count;
 		free(temp);
 	}
 
@@ -328,7 +373,7 @@ node* Avl_tree::find_node(void *data){
 	// if node containing data not found return NULL.
 	node *temp = root;
 	while(temp != NULL){
-		int result = compare(data,temp->data);
+		int result = compare_function(data,temp->data);
 		if(result == 0) return temp;
 		else if(result < 0) temp = temp->left;
 		else if(result > 0) temp = temp->right;
@@ -340,7 +385,7 @@ node* Avl_tree::find_node(void *data){
 node* Avl_tree::right_rotate(node *nod){
 #ifdef DEBUG
 	printf("right rotating node..\n");
-	print_node(nod);
+	print_node_function(nod);
 #endif
 	node *parent = nod->parent;
 	node *nod_left = nod->left;
@@ -377,7 +422,7 @@ node* Avl_tree::right_rotate(node *nod){
 node* Avl_tree::left_rotate(node *nod){
 #ifdef DEBUG
 	printf("left rotating node...\n");
-	print_node(nod);
+	print_node_function(nod);
 #endif
 	node *parent = nod->parent;
 	node *nod_right = nod->right;
@@ -469,7 +514,7 @@ node* Avl_tree::balance(node *nod){
 void Avl_tree::inorder(node *nod){
 	if(nod == NULL) return;
 	inorder(nod->left);
-	print_node(nod);
+	print_node_function(nod);
 	inorder(nod->right);
 }
 
@@ -478,7 +523,6 @@ void Avl_tree::inorder_traversal(){
 	printf("Inorder traversal...\n");
 	inorder(root);
 }
-
 
 static void print_node_addr(node *nod){
 	printf("node = %p\n",nod);
@@ -491,13 +535,6 @@ static void print_node_addr(node *nod){
 
 
 
-int my_comparator(void *p1, void *p2){
-	int a1 = *(int*)p1;
-	int a2 = *(int*)p2;
-	if(a1 > a2) return 1;
-	if(a1 == a2) return 0;
-	if(a1 < a2) return -1;
-}
 
 void my_node_printer(node *nod){
 	if(!nod){
@@ -509,12 +546,14 @@ void my_node_printer(node *nod){
 }
 
 
-void my_data_deleter(void *data){
-	//TODO 
-}
-
 int main(){
-	Avl_tree tree(&my_comparator,&my_node_printer);
+	Avl_tree tree(	[](void *p1, void *p2)->int{
+						int a1 = *(int*)p1, a2 = *(int*)p2;
+						return a1==a2?0:(a1>a2?1:-1);
+					}, 
+					[](void *data)->void{ return; },
+					my_node_printer
+				);
 	int n;
 	cin>>n;
 	int a[n];
@@ -531,6 +570,7 @@ int main(){
 	while(1){
 		int n;
 		cin>>n;
+		printf("its rank was %d\n",tree.rank(&n));
 		tree.delete_data(&n);
 		tree.inorder_traversal();
 	}
