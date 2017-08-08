@@ -1,25 +1,4 @@
-/* Generic AVL Tree */
-/* Author: Shailesh Kumar<sk38@iitbbs.ac.in> */
-
-/* License
-    Copyright (C) 2017 Shailesh Kumar
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-
-#include<bits/stdc++.h>
+#include"avl_tree.h"
 
 using namespace std;
 
@@ -37,126 +16,15 @@ using namespace std;
 
 
 
-struct node_t{
-	// node attributes.
-	int height; 								
-	int size;
+static void print_node_addr(node *nod){
+	printf("node = %p\n",nod);
+}
 
-	// repeated elements will have only one node
-	int count;									
-	
-	// data to be stored in node.
-	void *data; 								
-	
-	// pointers to children and parent.
-	struct node_t *left;  						
-	struct node_t *right; 						
-	struct node_t *parent;						
-
-};
-
-typedef struct node_t node;
-
-
-static void print_node_addr(node*);
-
-
-class Avl_tree{
-
-	node *root;
-
-	// If this flag is set tree will contain unique elements.
-	bool unique_nodes;
-
-	// compare function should be passed to compare node's data.
-	int (*compare_function)(void*,void*);
-	/* 	Comparator function should follow this rule.
-		int compare(a,b){
-			if(a==b) return 0;
-			if(a>b) return 1;
-			if(a<b) return -1;
-		}
-	*/
-
-
-
-	void (*print_node_function)(node*);
-	/*	custom print_node function should be passed,
-		so that you can print your node's attributes and node's
-	 	data in desired manner. If passed NULL insted will print only 
-	 	node address by default.
-	*/
-					
-	
-	void (*delete_data_function)(void*);
-	/*	pass your own node's data deletion function
-		this will be called every time a node is begin 
-		deleted from tree, to free memory occupied by node->data.
-	*/
-
-	
-public:
-	/* 	Constructor takes input comparator function,  
-		node_printer function and
-		node's data deleter function.
-	*/
-	Avl_tree(	int (*comparator_fun)(void*,void*), 
-				void (*delete_data_fun)(void*),
-				void (*print_node_fun)(node*)
-			);
-	
-	
-	// insert the data into tree.
-	void insert_data(void *data);
-
-	// delete the node containing data passed.
-	void delete_data(void *data);
-
-	// find node for a data.
-	node* find_node(void *data);
-
-	// prints inorder traversal of this tree.
-	void inorder_traversal();
-	
-	// find the rank of a node containing data in tree.
-	// if nodes were in an sorted array what would have been its rank.
-	int rank(void *data);
-
-	// returns tree size.
-	int size();
-
-	// set unique_nodes flag.
-	void set_unique_nodes(bool);
-
-private:
-	// delete node from tree.
-	void delete_node(node *nod);
-
-	// insert data using root node of tree.
-	node* insert_node(node *nod, void *data, node *parent);
-
-	// balance the tree at a given node.
-	node* balance(node *nod);
-
-	// left rotate tree wrt a node.
-	node* left_rotate(node* nod);
-
-	// right rotate tree wrt a node.
-	node* right_rotate(node* nod);
-
-	// update node attributes like height and size.
-	void update_node_attributes(node *nod);
-
-	// inorder_traversal of this tree.
-	void inorder(node *nod);
-	
-
-};
 
 Avl_tree::Avl_tree(	int (*comparator_fun)(void*,void*), 
 					void (*delete_data_fun)(void*),
-					void (*print_node_fun)(node*) = print_node_addr
-				){
+					void (*print_node_fun)(node*)
+		){
 	// Initialise root to NULL.
 	root = NULL;
 
@@ -173,6 +41,12 @@ Avl_tree::Avl_tree(	int (*comparator_fun)(void*,void*),
 	// By default unique_nodes flag is set to false to insert repeated elements.
 	unique_nodes = false;
 
+}
+
+Avl_tree::Avl_tree( 	int (*comparator_fun)(void*,void*),
+			void (*delete_data_fun)(void*)
+		){
+	Avl_tree(comparator_fun,delete_data_fun,print_node_function);
 }
 
 int Avl_tree::size(){
@@ -540,7 +414,9 @@ node* Avl_tree::balance(node *nod){
 void Avl_tree::inorder(node *nod){
 	if(nod == NULL) return;
 	inorder(nod->left);
-	print_node_function(nod);
+	int n = nod->count;
+	while(n--)
+		print_node_function(nod);
 	inorder(nod->right);
 }
 
@@ -550,76 +426,6 @@ void Avl_tree::inorder_traversal(){
 	inorder(root);
 }
 
-static void print_node_addr(node *nod){
-	printf("node = %p\n",nod);
-}
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void my_node_printer(node *nod){
-	if(!nod){
-		printf("NULL\n");
-		return;
-	}
-	printf("data = %d, height = %d, size = %d, parent = %d\n",*(int*)(nod->data),
-		nod->height,nod->size,nod->parent?*(int*)(nod->parent->data):-1);
-}
-
-
-int main(){
-	Avl_tree tree(	[](void *p1, void *p2)->int{
-						int a1 = *(int*)p1, a2 = *(int*)p2;
-						return a1==a2?0:(a1>a2?1:-1);
-					}, 
-					[](void *data)->void{ return; },
-					my_node_printer
-				);
-	tree.set_unique_nodes(true);
-	printf("DEBUG_LVL = %d\n",DEBUG_LVL);
-	int n;
-	cin>>n;
-	int a[n];
-	for(int i=0;i<n;i++){
-		scanf("%d",a+i);
-		printf("inserting %d\n",a[i]);
-		tree.insert_data((void*)(a+i));
-		
-		tree.inorder_traversal();
-		cout<<endl;
-	}
-
-
-	while(1){
-		int n;
-		cin>>n;
-		printf("its rank was %d\n",tree.rank(&n));
-		tree.delete_data(&n);
-		tree.inorder_traversal();
-	}
-
-
-
-}
