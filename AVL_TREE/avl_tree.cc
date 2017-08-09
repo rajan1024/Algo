@@ -43,12 +43,6 @@ Avl_tree::Avl_tree(	int (*comparator_fun)(void*,void*),
 
 }
 
-Avl_tree::Avl_tree( 	int (*comparator_fun)(void*,void*),
-			void (*delete_data_fun)(void*)
-		){
-	Avl_tree(comparator_fun,delete_data_fun,print_node_function);
-}
-
 int Avl_tree::size(){
 	return root?root->size:0;
 }

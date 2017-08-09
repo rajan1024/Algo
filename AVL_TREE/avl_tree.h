@@ -65,10 +65,6 @@ public:
 			void (*delete_data_fun)(void*),
 			void (*print_node_fun)(node*)
 		);
-
-	Avl_tree( 	int (*comparator_fun)(void*,void*),
-			void (*delete_data_fun)(void*)
-		);
 	
 	// insert the data into tree.
 	void insert_data(void *data);
