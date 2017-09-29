@@ -2,7 +2,7 @@
 /* Author: Shailesh Kumar<sk38@iitbbs.ac.in> */
 
 /* License
-    Copyright (C) 2017 Shailesh Kumar
+    Copyright (C) 2017 
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -31,8 +31,8 @@ using namespace std;
 
 
 /* Heighest Debug Level */
-#define TREE_CONSTRUCTION 1
-#define INFO 2
+#define TREE_CONSTRUCTION 2
+#define INFO 1
 /* Lowest Debug Level */
 
 
@@ -247,7 +247,7 @@ node* Avl_tree::insert_node(node *nod, void *data, node *parent){
 		// repeated element encounterd.
 		// If unique_nodes flag is set don't insert.
 		if(unique_nodes){
-#if (DEBUG_LVL <= INFO)
+#if (DEBUG_LVL >= INFO)
 			printf("Node already exists, not inserting..\n");
 			print_node_function(nod);
 #endif
@@ -264,7 +264,7 @@ node* Avl_tree::insert_node(node *nod, void *data, node *parent){
 	int right_height = nod->right?nod->right->height:0;
 	
 	if(abs(left_height-right_height) > 1){
-#if (DEBUG_LVL <= TREE_CONSTRUCTION)
+#if (DEBUG_LVL >= TREE_CONSTRUCTION)
 		printf("Tree unbalanced at node\n");
 		print_node_function(nod);
 #endif
@@ -291,7 +291,7 @@ void Avl_tree::delete_data(void *data){
 
 	}
 	else{
-#if (DEBUG_LVL <= INFO)
+#if (DEBUG_LVL >= INFO)
 		printf("Delete Failed. Node not found.\n");
 #endif
 	}
@@ -409,7 +409,7 @@ node* Avl_tree::find_node(void *data){
 
 
 node* Avl_tree::right_rotate(node *nod){
-#if (DEBUG_LVL <= TREE_CONSTRUCTION)
+#if (DEBUG_LVL >= TREE_CONSTRUCTION)
 	printf("Right rotating node..\n");
 	print_node_function(nod);
 #endif
@@ -446,7 +446,7 @@ node* Avl_tree::right_rotate(node *nod){
 }
 
 node* Avl_tree::left_rotate(node *nod){
-#if (DEBUG_LVL <= TREE_CONSTRUCTION)
+#if (DEBUG_LVL >= TREE_CONSTRUCTION)
 	printf("Left rotating node...\n");
 	print_node_function(nod);
 #endif
