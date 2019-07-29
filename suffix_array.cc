@@ -11,8 +11,8 @@ typedef pair<int,int> pii;
 typedef pair<lli,lli> plli;
 
 
-// suf[i] = k => kth suffix have ith position..
-// pos[i] = k => ith suffix have kth position..
+// suf[i] = k => ith rank has kth index.
+// pos[i] = k => ith index has kth rank.
 
 void suffix_array(char *str, int *suf){
 	int n = strlen(str);
