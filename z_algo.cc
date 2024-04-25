@@ -52,3 +52,11 @@ int main(){
 	int ans = z_algo(str1,str2);
 	cout<<ans<<endl;
 }
+
+
+
+
+
+
+
+
